@@ -691,6 +691,7 @@ extension BrickFlowLayout {
         insertedIndexPaths = []
         deletedIndexPaths = []
         reloadIndexPaths = []
+        downStreamBehaviorIndexPaths = [:]
 
         for item in updateItems {
             if item.updateAction == .insert {
@@ -719,7 +720,9 @@ extension BrickFlowLayout {
                     return indexPath.section == sectionIndex
                 })
 
-                section.updateNumberOfItems(inserted: inserted.map({$0.item}), deleted: deleted.map({$0.item}))
+                section.updateNumberOfItems(inserted: inserted.map({$0.item}), deleted: deleted.map({$0.item}), completion: { [weak self] in
+                    self?.updateDownStreamIndexPaths(for: inserted, and: deleted, with: sectionIndex)
+                })
             }
         }
 
@@ -737,6 +740,39 @@ extension BrickFlowLayout {
             case .brick:
                 BrickLayoutInvalidationContext(type: .invalidateHeight(indexPath: indexPath)).invalidateWithLayout(self)
             default: break
+            }
+        }
+    }
+
+    // Include the inserted index paths in the downstream update and the index paths
+    // that would have been offset by the insertion to be sure any attributes for new index
+    // paths have been created
+    fileprivate func updateDownStreamIndexPaths(for insertedIndexPaths: [IndexPath], and deletedIndexPaths: [IndexPath], with sectionIndex: Int) {
+        if !insertedIndexPaths.isEmpty {
+            guard let lastItem = insertedIndexPaths.last?.item, let numberOfItemsInSection = sections?[sectionIndex]?.numberOfItems else {
+                return
+            }
+
+            downStreamBehaviorIndexPaths[sectionIndex] = insertedIndexPaths
+
+            // Update any index paths that are offset by the insertion action
+            // `insertItemsAtIndexPaths`. We check to make sure we aren't calculating
+            // downstream attributes for index paths that otherwise wouldn't exist
+            // by checking the number of items in section
+            for offset in 1...insertedIndexPaths.count where lastItem + offset < numberOfItemsInSection {
+                let offsetIndexPath = IndexPath(item: lastItem + offset, section: sectionIndex)
+                downStreamBehaviorIndexPaths[sectionIndex]?.append(offsetIndexPath)
+            }
+        } else {
+            guard let downStreamPaths = downStreamBehaviorIndexPaths[sectionIndex] else {
+                return
+            }
+
+            let deletedItems = deletedIndexPaths.flatMap({ $0.item })
+            for i in 0..<downStreamPaths.count {
+                if deletedItems.contains(downStreamPaths[i].item) && i < downStreamBehaviorIndexPaths[sectionIndex]?.count ?? 0 {
+                    downStreamBehaviorIndexPaths[sectionIndex]?.remove(at: i)
+                }
             }
         }
     }

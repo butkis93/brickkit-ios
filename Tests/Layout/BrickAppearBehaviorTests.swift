@@ -73,13 +73,13 @@ class BrickAppearBehaviorTests: XCTestCase {
     // Mark: - Fade
 
     func testFadeAppear() {
-        let fadeAppear = BrickAppearFadeBehavior()
+        let fadeAppear = BrickAppearScaleBehavior()
         fadeAppear.configureAttributesForAppearing(attributes, in: brickCollectionView)
         XCTAssertEqual(attributes.alpha, 0)
     }
 
     func testFadeDisappear() {
-        let fadeAppear = BrickAppearFadeBehavior()
+        let fadeAppear = BrickAppearScaleBehavior()
         fadeAppear.configureAttributesForDisappearing(attributes, in: brickCollectionView)
         XCTAssertEqual(attributes.alpha, 0)
     }

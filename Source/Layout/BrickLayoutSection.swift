@@ -138,12 +138,12 @@ internal class BrickLayoutSection {
     }
 
     /// Update the number of items for this BrickLayoutSection
-    func updateNumberOfItems(inserted: [Int], deleted: [Int]) {
+    func updateNumberOfItems(inserted: [Int], deleted: [Int], completion: (()->Void)? = nil) {
         guard inserted.count + deleted.count > 0 else {
             return
         }
 
-        var startIndexToUpdate: Int = numberOfItems - 1
+        var startIndexToUpdate: Int = numberOfItems
 
         let sortedDeleted = deleted.sorted(by: >)
 
@@ -151,7 +151,7 @@ internal class BrickLayoutSection {
             attributes[index] = nil
 
             // Move every index with 1
-            for i in (index+1)..<numberOfItems {
+            for i in (index+1)..<startIndexToUpdate {
                 if let attribute = attributes[i] {
                     attribute.indexPath.item = i-1
                     attributes[i-1] = attribute
@@ -167,7 +167,7 @@ internal class BrickLayoutSection {
 
         for index in sortedInserted {
             // Move every index with 1
-            for i in stride(from: numberOfItems, to: index, by: -1) {
+            for i in stride(from: startIndexToUpdate, to: index, by: -1) {
                 if let attribute = attributes[i-1] {
                     attribute.indexPath.item = i
                     attributes[i] = attribute
@@ -180,6 +180,8 @@ internal class BrickLayoutSection {
         
         numberOfItems += inserted.count
         numberOfItems -= deleted.count
+
+        completion?()
     }
 
     /// Update the identifiers for the attributes

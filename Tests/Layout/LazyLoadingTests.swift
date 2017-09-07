@@ -399,7 +399,7 @@ extension LazyLoadingTests {
 
         repeatCountDataSource.repeatCountHash = [BrickIdentifier: 101]
         brickView.invalidateRepeatCounts()
-        XCTAssertEqual(flowLayout.sections![1]!.attributes.count, 50)
+        XCTAssertEqual(flowLayout.sections![1]!.attributes.count, 51)
     }
 
     func testThatSettingLowerNumberOfItemsIsHandled() {
